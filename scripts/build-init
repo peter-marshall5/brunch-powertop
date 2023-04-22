@@ -1,0 +1,49 @@
+#!/bin/bash
+export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+export HOME=/home/chronos
+export LD_LIBRARY_PATH=/home/chronos/ncurses-pkg/usr/lib64:/usr/local/lib64:/usr/local/lib:/usr/lib64:/usr/lib:/lib64:/lib
+export C_INCLUDE_PATH=/home/chronos/ncurses-pkg/usr/include:/usr/local/include:/usr/include
+export GCONV_PATH=/usr/local/lib64/gconv
+export PERL5LIB=/usr/local/lib/perl5/5.32.0
+export PKG_CONFIG_PATH=/home/chronos/ncurses-pkg/usr/lib64/pkgconfig:/home/chronos/efibootmgr-pkg/usr/lib64/pkgconfig:/usr/local/lib64/pkgconfig:/usr/local/share/pkgconfig
+export PYTHON=/usr/local/bin/python3
+export PYTHONHOME=/usr/local
+export SGML_CATALOG_FILES="/usr/local/etc/sgml/catalog"
+export XML_CATALOG_FILES="/usr/local/etc/xml/catalog"
+export LANGUAGE=en_US.UTF-8
+export LANG=en_US.UTF-8
+export LC_ALL=en_US.UTF-8
+
+cd /home/chronos/
+
+version="$(/opt/google/chrome/chrome --version)"
+version=r"${version:14:3}"
+[ ! "$version" == "" ] || { echo "Failed to identify ChromeOS version"; exit 1; }
+echo "Entered chroot with recovery version $version"
+
+sudo chown 1000:1000 /usr/local || { echo "Failed to change ownership of /usr/local"; exit 1; }
+
+# curl from Brunch toolchain seems to be broken
+curl -L https://github.com/fmtlib/fmt/archive/9.1.0.tar.gz -o fmt.tar.gz
+
+if [ ! -f brunch_toolchain.tar.gz ]; then
+curl -L https://github.com/sebanc/brunch-toolchain/releases/download/20210529/brunch_toolchain_20210529.tar.gz -o brunch_toolchain.tar.gz || { echo "Failed to download the brunch toolchain"; exit 1; }
+fi
+tar zxf brunch_toolchain.tar.gz -C /usr/local || { echo "Failed to extract the brunch toolchain"; exit 1; }
+sudo rm -f /usr/lib64/libc.so /usr/lib64/libm.so /usr/lib64/libpthread.so
+
+mkdir -p ./binaries-pkg/usr/bin ./binaries-pkg/usr/sbin || { echo "Failed to make binaries package directories"; exit 1; }
+
+git clone https://github.com/fenrus75/powertop.git --depth 1
+cd powertop
+./autogen.sh
+./configure
+make -j"$NTHREADS"
+find .
+cd ..
+
+cd binaries-pkg
+tar zcvf ../brunch/out/binaries.tar.gz * --owner=0 --group=0 || { echo "Failed to make binaries package archive"; exit 1; }
+cd ..
+
+echo "End of chroot"

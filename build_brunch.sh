@@ -54,7 +54,6 @@ chown -R 1000:1000 ./chroot/home/chronos/brunch || { echo "Failed to fix brunch 
 mkdir -p ./chroot/home/chronos/initramfs/sbin || { echo "Failed to create initramfs directory"; exit 1; }
 cp ./scripts/brunch-init ./chroot/home/chronos/initramfs/init || { echo "Failed to copy brunch init script"; exit 1; }
 cp ./scripts/brunch-setup ./chroot/home/chronos/initramfs/sbin/ || { echo "Failed to copy brunch setup script"; exit 1; }
-cp -r ./bootsplashes ./chroot/home/chronos/initramfs/ || { echo "Failed to copy bootsplashes"; exit 1; }
 chmod 0755 ./chroot/home/chronos/initramfs/init || { echo "Failed to change init script permissions"; exit 1; }
 chown -R 1000:1000 ./chroot/home/chronos/initramfs || { echo "Failed to fix initramfs directory ownership"; exit 1; }
 
